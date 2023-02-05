@@ -5,6 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
+/*Dialog to confirm deletion of entry*/
 export default function ConfirmationDialog({ open, setOpen, handleDelete }) {
 
     /*Handle cancel vs. confirmation seperately and call respective EntryModal set state functions*/

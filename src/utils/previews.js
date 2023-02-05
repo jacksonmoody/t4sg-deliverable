@@ -1,9 +1,11 @@
+/*Wait for all link previews to be fetched, then return previews for each link in database*/
 function getPreviews(entries) {
     const links = entries.map(entry => entry.link);
     const promises = links.map(link => getPreview(link));
     return Promise.all(promises);
 }
 
+/*For each link, get preview data from Peekalink API*/
 function getPreview(link) {
     return new Promise(
       (resolve, reject) => {
