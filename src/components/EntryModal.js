@@ -13,7 +13,8 @@ import TextField from '@mui/material/TextField';
 import * as React from 'react';
 import { useState } from 'react';
 import { categories } from '../utils/categories';
-import { addEntry } from '../utils/mutations';
+import { addEntry, updateEntry, deleteEntry } from '../utils/mutations';
+import ConfirmationDialog from './ConfirmationDialog';
 
 // Modal component for individual entries.
 
@@ -35,6 +36,8 @@ export default function EntryModal({ entry, type, user }) {
    const [link, setLink] = useState(entry.link);
    const [description, setDescription] = useState(entry.description);
    const [category, setCategory] = React.useState(entry.category);
+   const [editing, setEditing] = useState(false);
+   const [deleteOpen, setDeleteOpen] = useState(false);
 
    // Modal visibility handlers
 
@@ -47,15 +50,22 @@ export default function EntryModal({ entry, type, user }) {
    };
 
    const handleClose = () => {
+      setEditing(false);
       setOpen(false);
    };
 
    // Mutation handlers
 
    const handleAdd = () => {
+      let formattedLink;
+      if (link.includes("http://") || link.includes("https://")) {
+         formattedLink = link;
+      } else {
+         formattedLink = "https://" + link;
+      }
       const newEntry = {
          name: name,
-         link: link,
+         link: formattedLink,
          description: description,
          user: user?.displayName ? user?.displayName : "GenericUser",
          category: category,
@@ -68,7 +78,33 @@ export default function EntryModal({ entry, type, user }) {
 
    // TODO: Add Edit Mutation Handler
 
+   const handleEdit = () => {
+      let formattedLink;
+      if (link.includes("http://") || link.includes("https://")) {
+         formattedLink = link;
+      } else {
+         formattedLink = "https://" + link;
+      }
+      const newEntry = {
+         id: entry.id,
+         name: name,
+         link: formattedLink,
+         description: description,
+         category: category,
+      };
+
+      updateEntry(newEntry).catch(console.error);
+      handleClose();
+   }
+
    // TODO: Add Delete Mutation Handler
+
+   const handleDelete = (confirm) => {
+      if (confirm) {
+         deleteEntry(entry.id).catch(console.error);
+      }
+      handleClose();
+   }
 
    // Button handlers for modal opening and inside-modal actions.
    // These buttons are displayed conditionally based on if adding or editing/opening.
@@ -87,6 +123,9 @@ export default function EntryModal({ entry, type, user }) {
       type === "edit" ?
          <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
+            <Button color="error" onClick={() => setDeleteOpen(true)}>Delete</Button>
+            <Button variant="contained" onClick={() => setEditing(true)} sx={editing ? { display: 'none' } : { display: 'inline' }}>Edit</Button>
+            <Button variant="contained" onClick={handleEdit} sx={editing ? { display: 'inline' } : { display: 'none' }}>Confirm</Button>
          </DialogActions>
          : type === "add" ?
             <DialogActions>
@@ -101,7 +140,6 @@ export default function EntryModal({ entry, type, user }) {
          <Dialog open={open} onClose={handleClose}>
             <DialogTitle>{type === "edit" ? name : "Add Entry"}</DialogTitle>
             <DialogContent>
-               {/* TODO: Feel free to change the properties of these components to implement editing functionality. The InputProps props class for these MUI components allows you to change their traditional CSS properties. */}
                <TextField
                   margin="normal"
                   id="name"
@@ -110,6 +148,12 @@ export default function EntryModal({ entry, type, user }) {
                   variant="standard"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
+                  disabled={type === "edit" ? !editing : false}
+                  sx={{
+                     "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "#000000",
+                     },
+                  }}
                />
                <TextField
                   margin="normal"
@@ -120,6 +164,12 @@ export default function EntryModal({ entry, type, user }) {
                   variant="standard"
                   value={link}
                   onChange={(event) => setLink(event.target.value)}
+                  disabled={type === "edit" ? !editing : false}
+                  sx={{
+                     "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "#000000",
+                     },
+                  }}
                />
                <TextField
                   margin="normal"
@@ -131,6 +181,12 @@ export default function EntryModal({ entry, type, user }) {
                   maxRows={8}
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
+                  disabled={type === "edit" ? !editing : false}
+                  sx={{
+                     "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "#000000",
+                     },
+                  }}
                />
 
                <FormControl fullWidth sx={{ "margin-top": 20 }}>
@@ -141,6 +197,12 @@ export default function EntryModal({ entry, type, user }) {
                      value={category}
                      label="Category"
                      onChange={(event) => setCategory(event.target.value)}
+                     disabled={type === "edit" ? !editing : false}
+                     sx={{
+                        "& .MuiInputBase-input.Mui-disabled": {
+                           WebkitTextFillColor: "#000000",
+                        },
+                     }}
                   >
                      {categories.map((category) => (<MenuItem value={category.id}>{category.name}</MenuItem>))}
                   </Select>
@@ -148,6 +210,7 @@ export default function EntryModal({ entry, type, user }) {
             </DialogContent>
             {actionButtons}
          </Dialog>
+         <ConfirmationDialog open={deleteOpen} setOpen={setDeleteOpen} handleDelete={handleDelete} />
       </div>
    );
 }

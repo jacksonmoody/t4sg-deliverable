@@ -9,7 +9,6 @@ import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
 import Stack from "@mui/material/Stack";
 import { createTheme, styled, ThemeProvider } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
@@ -20,9 +19,10 @@ import { useEffect, useState } from "react";
 import './App.css';
 import EntryTable from './components/EntryTable';
 import EntryModal from './components/EntryModal';
-import { mainListItems } from './components/listItems';
+import MainListItems from './components/listItems';
 import { db, SignInScreen } from './utils/firebase';
 import { emptyEntry } from './utils/mutations';
+import DetailView from './components/DetailView';
 
 // MUI styling constants
 
@@ -82,6 +82,7 @@ export default function App() {
 
   const [isSignedIn, setIsSignedIn] = useState(false); // Local signed-in state.
   const [currentUser, setcurrentUser] = useState(null); // Local user info
+  const [currentView, setCurrentView] = useState("default"); // Page view
 
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
@@ -126,18 +127,24 @@ export default function App() {
 
   function mainContent() {
     if (isSignedIn) {
-      return (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Stack direction="row" spacing={3}>
-              <EntryModal entry={emptyEntry} type="add" user={currentUser} />
-            </Stack>
+      if (currentView === "default") {
+        return (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Stack direction="row" spacing={3}>
+                <EntryModal entry={emptyEntry} type="add" user={currentUser} />
+              </Stack>
+            </Grid>
+            <Grid item xs={12}>
+              <EntryTable entries={entries} />
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <EntryTable entries={entries} />
-          </Grid>
-        </Grid>
-      )
+        )
+      } else if (currentView === "detail") {
+        return (
+          <DetailView entries={entries}/>
+        )
+      }
     } else return (
       <SignInScreen></SignInScreen>
     )
@@ -212,9 +219,7 @@ export default function App() {
             </IconButton>
           </Toolbar>
           <Divider />
-          <List component="nav">
-            {mainListItems}
-          </List>
+          <MainListItems setCurrentView={setCurrentView}/>
         </Drawer>
         <Box
           component="main"
